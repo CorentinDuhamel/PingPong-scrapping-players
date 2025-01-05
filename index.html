@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joueurs ayant participé à des tournois</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .separator {
+            height: 4px;
+            background-color: #ededed;
+            margin: 10px 0 20px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filters select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f9f9f9;
+            font-size: 14px;
+        }
+
+        .export-button {
+            padding: 10px 15px;
+            background-color: #007b8f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .export-button:hover {
+            background-color: #005f6e;
+        }
+
+        .active-filters {
+            margin-bottom: 20px;
+        }
+
+        .active-filters span {
+            display: inline-block;
+            background: #e0e0e0;
+            color: #333;
+            padding: 5px 10px;
+            margin-right: 5px;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Joueurs ayant participé à des tournois</h1>
+        <div class="separator"></div>
+
+        <div class="filters">
+            <select id="filter-club">
+                <option value="">Club</option>
+                <!-- Options dynamiques à ajouter -->
+            </select>
+
+            <select id="filter-committee">
+                <option value="">Comité</option>
+                <!-- Options dynamiques à ajouter -->
+            </select>
+
+            <select id="filter-ranking">
+                <option value="">Classement</option>
+                <!-- Options dynamiques à ajouter -->
+            </select>
+
+            <select id="filter-tournaments">
+                <option value="">Nombre de tournois</option>
+                <!-- Options dynamiques à ajouter -->
+            </select>
+
+            <select id="filter-tournament">
+                <option value="">Tournoi</option>
+                <!-- Options dynamiques à ajouter -->
+            </select>
+
+            <button class="export-button" onclick="exportCSV()">Exporter</button>
+        </div>
+
+        <div class="active-filters" id="active-filters">
+            <!-- Filtres actifs affichés ici -->
+        </div>
+
+        <table id="players-table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Club</th>
+                    <th>Comité</th>
+                    <th>Classement</th>
+                    <th>Nombre de tournois</th>
+                    <th>Tournoi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Données dynamiques insérées ici -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Fonction pour charger le fichier CSV et afficher les données
+        function loadCSV() {
+            fetch('/Users/corentinduhamel/Documents/BCL/scrapping/tournoi pingpocket/result.csv')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors du chargement du fichier CSV.');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    const rows = data.split('\n');
+                    const tbody = document.getElementById('players-table').querySelector('tbody');
+                    tbody.innerHTML = '';
+
+                    rows.forEach((row, index) => {
+                        if (row.trim() !== '') {
+                            const cols = row.split(',');
+                            const tr = document.createElement('tr');
+
+                            cols.forEach(col => {
+                                const td = document.createElement(index === 0 ? 'th' : 'td');
+                                td.textContent = col.trim();
+                                tr.appendChild(td);
+                            });
+
+                            tbody.appendChild(tr);
+                        }
+                    });
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        // Fonction pour exporter les données en CSV
+        function exportCSV() {
+            let table = document.getElementById("players-table");
+            let rows = table.querySelectorAll("tr");
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            rows.forEach(row => {
+                let cols = row.querySelectorAll("th, td");
+                let rowData = [];
+
+                cols.forEach(col => rowData.push(col.textContent));
+                csvContent += rowData.join(",") + "\n";
+            });
+
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "joueurs.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Charger le fichier CSV au démarrage
+        document.addEventListener('DOMContentLoaded', loadCSV);
+    </script>
+</body>
+</html>
