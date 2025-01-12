@@ -127,6 +127,78 @@
             color: #f00;
         }
 
+
+        .filter-ranking {
+            position: relative;
+            border-radius: 5px;
+            padding: 10px;
+            padding-left: 13px;
+            font-size: 15px;
+            cursor: pointer;
+            width: 160px;
+            text-align: center;
+        }
+
+        .filter-ranking:hover {
+            border-color: #007b8f;
+        }
+
+        .filter-popup {
+            display: none;
+            position: absolute;
+            top: 130%;
+            left: 0;
+            width: auto; /* Ajustement pour éviter de dépasser la taille */
+            grid-template-columns: repeat(2, 1fr);  
+            align-items: center;
+            gap: 10px; /* Espace entre les éléments */
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            padding: 10px 15px;
+            z-index: 1000;
+        }
+
+        
+        .filter-popup label {
+            font-size: 12px;
+            color: #333;
+            text-align: left;
+            color: #757575;
+        }
+
+        .filter-input {
+            width: 80px; /* Ajuste la largeur pour ressembler au design */
+            padding: 3px;
+            box-sizing: border-box;
+            border: none;
+            border-bottom: 1px solid #9DBDC2;
+            font-size: 14px;
+            margin: 0; /* Supprime les marges inutiles */
+            text-align: left;
+        }
+
+        .filter-popup button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 2px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .filter-popup button:hover {
+            background-color: #0056b3;
+        }
+
+        .filter-ranking.active .filter-popup {
+            display: grid;
+        }
+
+
     </style>
 </head>
 
@@ -144,6 +216,20 @@
         <select id="filter-tournoi" class="filter-dropdown">
             <option value="tournoi" disabled selected>Tournoi</option>
         </select>
+
+        <div class="filter-container">
+            <div class="filter-dropdown filter-ranking" id="filter-ranking">
+                <span>Classement</span>
+                <div class="filter-popup">
+                    <label for="min-ranking">Min</label>
+                    <label for="max-ranking">Max</label>
+                    <input type="number" min="500" id="min-ranking" class="filter-input" placeholder="Min" />
+                    <input type="number" min="500" id="max-ranking" class="filter-input" placeholder="Max" />
+                </div>
+            </div>
+        </div>
+
+        
         <select id="filter-committee" class="filter-dropdown">
             <option value="comite" disabled selected>Comités</option>
             <option value="01 - Ain">01 - Ain</option>
@@ -264,8 +350,8 @@
 
    
 <script>
-    
-    let allData = [];
+
+    let allData = []; // Toutes les données chargées
     let selectedClubs = [];
     let selectedTournois = [];
     let selectedCommittees = [];
@@ -330,9 +416,11 @@
                 populateClubFilter(4);
                 populateTournoiFilter(5);
                 populateCommitteeFilter();
+                populateRankingFilter();
                 populateTable(allData);
             });
     }
+
 
     // Générer dynamiquement les options pour le filtre Club
     function populateClubFilter(column) {
@@ -429,6 +517,14 @@
             filterElement.classList.remove('choices--highlight-green');
         }
         filterElement.value = 'comite';
+
+
+        filterElement = document.getElementById('filter-ranking');
+        if (document.getElementById('min-ranking').value || document.getElementById('max-ranking').value) {
+            filterElement.classList.add('choices--highlight-green');
+        } else {
+            filterElement.classList.remove('choices--highlight-green');
+        }
     }
 
     // Afficher les tags sélectionnés sous le filtre
@@ -462,6 +558,27 @@
             tag.appendChild(removeBtn);
             tagsContainer.appendChild(tag);
         });
+        
+
+        if (document.getElementById('min-ranking').value || document.getElementById('max-ranking').value) {
+            const minRankingInput = document.getElementById('min-ranking');
+            const minValue = minRankingInput.value ? minRankingInput.value : minRankingInput.placeholder;
+
+            const maxRankingInput = document.getElementById('max-ranking');
+            const maxValue = maxRankingInput.value ? maxRankingInput.value : maxRankingInput.placeholder;
+
+            const tag = document.createElement('div');
+            tag.textContent = minValue + ' - ' + maxValue;
+            tag.className = 'tag';
+
+            const removeBtn = document.createElement('span');
+            removeBtn.textContent = '⨉';
+            removeBtn.className = 'remove-btn';
+            removeBtn.onclick = () => removeRanking();
+
+            tag.appendChild(removeBtn);
+            tagsContainer.appendChild(tag);
+        }
         selectedCommittees.forEach(comite => {
             const tag = document.createElement('div');
             tag.textContent = comite;
@@ -477,6 +594,17 @@
         });
     }
 
+    function populateRankingFilter() {
+        // Set min placeholder if no value
+        if (!document.getElementById('min-ranking').value) {
+            document.getElementById('min-ranking').placeholder = Math.min(...allData.map(row => parseInt(row[3])));
+        }
+        // Set max placeholder if no value
+        if (!document.getElementById('max-ranking').value) {
+            document.getElementById('max-ranking').placeholder = Math.max(...allData.map(row => parseInt(row[3])));
+        }
+    }
+
     // Supprimer un club de la sélection
     function removeClub(club) {
         selectedClubs = selectedClubs.filter(selected => selected !== club);
@@ -488,6 +616,14 @@
     // Supprimer un club de la sélection
     function removeTournoi(tournoi) {
         selectedTournois = selectedTournois.filter(selected => selected !== tournoi);
+        updateFilterStyle();
+        displayTags();
+        filterTable();
+    }
+
+    function removeRanking() {
+        document.getElementById('min-ranking').value = null;
+        document.getElementById('max-ranking').value = null;
         updateFilterStyle();
         displayTags();
         filterTable();
@@ -521,6 +657,16 @@
             });
         }
 
+
+        const minRanking = parseInt(document.getElementById('min-ranking').value) || Math.min(...filteredData.map(row => parseInt(row[3])));
+        const maxRanking = parseInt(document.getElementById('max-ranking').value) || Math.max(...filteredData.map(row => parseInt(row[3])));
+
+        filteredData = filteredData.filter(row => {
+            const ranking = parseInt(row[3]);
+            return ranking >= minRanking && ranking <= maxRanking;
+        });
+
+        populateRankingFilter();
         populateTable(filteredData);
     }
 
@@ -565,6 +711,49 @@
         link.click();
         document.body.removeChild(link);
     }
+
+
+    const filterRanking = document.getElementById('filter-ranking');
+    const filterPopup = document.querySelector('.filter-popup');
+
+    // Fonction pour vérifier si le clic est à l'intérieur d'un élément
+    function isClickInsideElement(event, element) {
+        return element.contains(event.target);
+    }
+
+    // Gestionnaire pour ouvrir/fermer la popup
+    filterRanking.addEventListener('click', (event) => {
+        event.stopPropagation(); // Empêche la propagation du clic à `document`
+        if (!filterRanking.classList.contains('active')) {
+            filterRanking.classList.add('active');
+        } else {
+            if (!isClickInsideElement(event, filterPopup)) {
+                filterRanking.classList.remove('active');
+            }
+        }
+    });
+
+    // Gestionnaire pour fermer la popup si on clique ailleurs
+    document.addEventListener('click', (event) => {
+        if (!isClickInsideElement(event, filterPopup)) {
+            filterRanking.classList.remove('active');
+        }
+    });
+
+
+
+    // Appliquer le filtre Classement
+    document.getElementById('min-ranking').addEventListener('input', () => {
+        displayTags();
+        filterTable();
+        updateFilterStyle();
+    });
+
+    document.getElementById('max-ranking').addEventListener('input', () => {
+        displayTags();
+        filterTable();
+        updateFilterStyle();
+    });
 
 
     document.addEventListener('DOMContentLoaded', loadCSV);
