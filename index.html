@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -73,7 +74,7 @@
             display: flex;
             flex-direction: row;
             align-items: flex-start;
-            margin-bottom: 18px;
+            margin-bottom: 6px;
         }
 
         .filter-dropdown {
@@ -416,7 +417,7 @@
                 populateClubFilter(4);
                 populateTournoiFilter(5);
                 populateCommitteeFilter();
-                populateRankingFilter();
+                populateRankingFilter(allData);
                 populateTable(allData);
             });
     }
@@ -441,8 +442,8 @@
             if (!selectedClubs.includes(selectedValue)) {
                 selectedClubs.push(selectedValue);
                 updateFilterStyle();
-                displayTags();
                 filterTable(4);
+                displayTags();
             }
         });
     }
@@ -466,8 +467,8 @@
             if (!selectedTournois.includes(selectedValue)) {
                 selectedTournois.push(selectedValue);
                 updateFilterStyle();
-                displayTags();
                 filterTable(5);
+                displayTags();
             }
         });
     }
@@ -484,8 +485,8 @@
             if (!selectedCommittees.includes(selectedValue)) {
                 selectedCommittees.push(selectedValue);
                 updateFilterStyle();
-                displayTags();
                 filterTable();
+                displayTags();
             }
         });
     }
@@ -558,7 +559,6 @@
             tag.appendChild(removeBtn);
             tagsContainer.appendChild(tag);
         });
-        
 
         if (document.getElementById('min-ranking').value || document.getElementById('max-ranking').value) {
             const minRankingInput = document.getElementById('min-ranking');
@@ -594,14 +594,14 @@
         });
     }
 
-    function populateRankingFilter() {
+    function populateRankingFilter(data) {
         // Set min placeholder if no value
         if (!document.getElementById('min-ranking').value) {
-            document.getElementById('min-ranking').placeholder = Math.min(...allData.map(row => parseInt(row[3])));
+            document.getElementById('min-ranking').placeholder = Math.min(...data.map(row => parseInt(row[3])));
         }
         // Set max placeholder if no value
         if (!document.getElementById('max-ranking').value) {
-            document.getElementById('max-ranking').placeholder = Math.max(...allData.map(row => parseInt(row[3])));
+            document.getElementById('max-ranking').placeholder = Math.max(...data.map(row => parseInt(row[3])));
         }
     }
 
@@ -609,32 +609,44 @@
     function removeClub(club) {
         selectedClubs = selectedClubs.filter(selected => selected !== club);
         updateFilterStyle();
-        displayTags();
         filterTable();
+        displayTags();
     }
 
     // Supprimer un club de la sélection
     function removeTournoi(tournoi) {
         selectedTournois = selectedTournois.filter(selected => selected !== tournoi);
         updateFilterStyle();
-        displayTags();
         filterTable();
+        displayTags();
     }
 
     function removeRanking() {
         document.getElementById('min-ranking').value = null;
         document.getElementById('max-ranking').value = null;
         updateFilterStyle();
-        displayTags();
         filterTable();
+        displayTags();
     }
 
     // Supprimer un comité de la sélection
     function removeCommittee(comite) {
         selectedCommittees = selectedCommittees.filter(selected => selected !== comite);
         updateFilterStyle();
-        displayTags();
         filterTable();
+        displayTags();
+    }
+
+
+    function populateRankingFilter(data) {
+        // Set min placeholder if no value
+        if (!document.getElementById('min-ranking').value) {
+            document.getElementById('min-ranking').placeholder = Math.min(...data.map(row => parseInt(row[3])));
+        }
+        // Set max placeholder if no value
+        if (!document.getElementById('max-ranking').value) {
+            document.getElementById('max-ranking').placeholder = Math.max(...data.map(row => parseInt(row[3])));
+        }
     }
 
     // Filtrer les données affichées dans le tableau
@@ -666,7 +678,7 @@
             return ranking >= minRanking && ranking <= maxRanking;
         });
 
-        populateRankingFilter();
+        populateRankingFilter(filteredData);
         populateTable(filteredData);
     }
 
@@ -741,18 +753,17 @@
     });
 
 
-
     // Appliquer le filtre Classement
     document.getElementById('min-ranking').addEventListener('input', () => {
-        displayTags();
         filterTable();
         updateFilterStyle();
+        displayTags();
     });
 
     document.getElementById('max-ranking').addEventListener('input', () => {
-        displayTags();
         filterTable();
         updateFilterStyle();
+        displayTags();
     });
 
 
